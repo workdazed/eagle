@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eagle Analytics Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,900;1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Urbanist', sans-serif;
+        }
+        
+        body {
+            display: flex;
+            min-height: 100vh;
+            color: #172B4D;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            /* Modern blue to light grey gradient background */
+            background:
+                radial-gradient(circle at 20% 80%, rgba(30, 73, 142, 0.273) 0%, transparent 30%),
+                radial-gradient(circle at 80% 40%, rgba(93, 101, 147, 0.293) 0%, transparent 30%),
+                radial-gradient(circle at 40% 80%, rgba(251, 188, 5, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 70% 100%, rgba(114, 124, 182, 0.343) 0%, transparent 30%),
+                linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 25%, #f8f9fa 50%, #e9ecef 75%, #f8f9fa 100%);
+            background-attachment: fixed;
+        }
+        
+        .sidebar {
+            width: 60px;
+            height: 100vh;
+            background-color: rgba(255, 255, 255, 0.4);
+            color: #2D3748;
+            overflow: hidden;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Hover state - only apply when not pinned */
+        .sidebar:not(.pinned):hover {
+            width: 240px;
+        }
+        
+        /* When pinned, always show expanded */
+        .sidebar.pinned {
+            width: 240px;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            padding: 40px 15px;
+            height: 70px;
+            border-bottom: 0px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .logo-eagle img {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            flex-shrink: 0;
+            left: -5px;
+            transition: margin-right 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-right: 0;
+            transition: margin-right 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sidebar:not(.pinned):hover .logo-icon,
+        .sidebar.pinned .logo-icon {
+            margin-right: 15px;
+        }
+        
+        .logo-text {
+            font-size: 26px;
+            font-weight: 900;
+            /*font-family: 'Hanken Grotesk', sans-serif;*/
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease 0.1s;
+            color: #8091af!important;
+            letter-spacing: -0.5px;
+            
+            /*background: linear-gradient(90deg, #2D3748, #4A5568);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;*/
+        }
+        
+        .sidebar:not(.pinned):hover .logo-text,
+        .sidebar.pinned .logo-text {
+            opacity: 1;
+            transform: translateX(0);
+            left: 10px;
+        }
+        
+        /* Updated: Container for vertically centered top links */
+        .nav-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: top;
+            flex-grow: 1;
+            min-height: 0; /* Important for flexbox to work correctly */
+        }
+        
+        .nav-links {
+            list-style: none;
+            padding: 15px 0;
+            /* Removed flex-grow to allow centering */
+        }
+        
+        .nav-links li {
+            position: relative;
+            margin: 2px 8px;
+        }
+        
+        .nav-links li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 10px;
+            color: #192c4c;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            border-radius: 15px;
+            font-weight: 500;
+            /* background-color: #ffffff5e; */
+            margin-bottom: 10px;
+        }
+        
+        .nav-links li a:hover {
+            color: #23313f;
+            background-color: rgba(105, 134, 158, 0.078);
+        }
+        
+        .nav-links li.active a {
+            background-color: rgb(105 134 158 / 15%);
+            color: #97a4be;
+            padding-left: 11px;
+            font-weight: 600;
+        }
+        
+        .nav-links li a i {
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+            color: #4A5568;
+        }
+        
+        .nav-links li.active a i {
+            color: #97a4be;
+        }
+        
+        .link-text {
+            margin-left: 0;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .sidebar:not(.pinned):hover .link-text,
+        .sidebar.pinned .link-text {
+            opacity: 1;
+            transform: translateX(0);
+            margin-left: 10px;
+        }
+        
+        .bottom-links {
+            list-style: none;
+            padding: 15px 0;
+            border-top: 0px solid rgba(0, 0, 0, 0.08);
+            /* Removed margin-top: auto to allow for separate bottom section */
+        }
+        
+        .bottom-links li {
+            position: relative;
+            margin: 2px 8px;
+        }
+        
+        .bottom-links li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 10px;
+            color: #4A5568;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .bottom-links li a:hover {
+            background-color: rgba(105, 134, 158, 0.078);
+            color: #23313f;
+        }
+        
+        .bottom-links li.active a {
+            background-color: rgb(105 134 158 / 15%);
+            color: #97a4be;
+            border-left: 0px solid #4299E1;
+            padding-left: 11px;
+            font-weight: 600;
+        }
+        
+        .bottom-links li a i {
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+            color: #4A5568;
+        }
+        
+        .bottom-links li.active a i {
+            color: #97a4be;
+        }
+        
+        /* Updated: Container for bottom section that stays at bottom */
+        .bottom-section {
+            margin-top: auto;
+            width: 100%;
+        }
+        
+        .content {
+            flex: 1;
+            margin-left: 60px;
+            padding: 30px;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .sidebar.pinned ~ .content {
+            margin-left: 240px;
+        }
+        
+        .content h1 {
+            color: #2D3748;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .content p {
+            line-height: 1.6;
+            color: #4A5568;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            font-weight: 400;
+            max-width: 600px;
+        }
+        
+        .user-section {
+            padding: 20px 15px;
+            border-top: 0px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #2d3748;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .user-info {
+            margin-left: 0;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .sidebar:not(.pinned):hover .user-info,
+        .sidebar.pinned .user-info {
+            opacity: 1;
+            transform: translateX(0);
+            margin-left: 15px;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: #2D3748;
+        }
+        
+        .user-role {
+            font-size: 0.85rem;
+            color: #718096;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+            }
+            
+            .sidebar:not(.pinned):hover,
+            .sidebar.pinned {
+                width: 240px;
+            }
+            
+            .content {
+                margin-left: 60px;
+            }
+            
+            .sidebar.pinned ~ .content {
+                margin-left: 240px;
+            }
+        }
+        
+        .pin-toggle {
+            display: flex;
+            align-items: center;
+            padding: 12px 10px;
+            margin: 6px;
+            color: #4A5568;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            margin-top: 0;
+            background: none;
+            border: none;
+            outline: none;
+            text-align: left;
+            font-size: inherit;
+        }
+        
+        .pin-toggle:hover {
+            color: #23313f;
+        }
+        
+        .pin-toggle i {
+            font-size: 18px;
+            width: 25px;
+            text-align: center;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+            color: #4A5568;
+        }
+        
+        .pin-toggle.active i {
+            transform: rotate(45deg);
+            color: #97a4be;
+        }
+        
+        .pin-text {
+            margin-left: 0;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .sidebar:not(.pinned):hover .pin-text,
+        .sidebar.pinned .pin-text {
+            opacity: 1;
+            transform: translateX(0);
+            margin-left: 10px;
+        }
+        
+        /* Background gradient accent elements */
+        .gradient-accent {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            z-index: -1;
+        }
+        
+        .accent-1 {
+            background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+            top: -100px;
+            right: -100px;
+        }
+        
+        .accent-2 {
+            background: linear-gradient(135deg, #F093FB 0%, #F5576C 100%);
+            bottom: -150px;
+            left: -100px;
+        }
+        
+        .accent-3 {
+            background: linear-gradient(135deg, #4FACFE 0%, #00F2FE 100%);
+            top: 50%;
+            left: 30%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background gradient accents -->
+    <!---<div class="gradient-accent accent-1"></div>
+    <div class="gradient-accent accent-2"></div>
+    <div class="gradient-accent accent-3"></div>--->
+    
+    <div class="sidebar" id="sidebar">
+        <div class="logo-container">
+            <div class="logo-eagle">
+                <img src="eagle_icon.png">
+            </div>
+            <div class="logo-text">Eagle</div>
+        </div>
+        
+        <!-- Container for vertically centered navigation -->
+        <div class="nav-container">
+            <ul class="nav-links">
+                <li class="active">
+                    <a href="#">
+                        <i class="fas fa-home"></i>
+                        <span class="link-text">Home</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-chart-line"></i>
+                        <span class="link-text">Scorecards</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Bottom section that stays at bottom -->
+        <div class="bottom-section">
+            <ul class="bottom-links">
+                <li>
+                    <a href="#">
+                        <i class="fas fa-question-circle"></i>
+                        <span class="link-text">Help</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-comment-alt"></i>
+                        <span class="link-text">Feedback</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-arrow-right-to-bracket"></i>
+                        <span class="link-text">Logout</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <button class="pin-toggle" id="pinToggle">
+                <i class="fas fa-thumbtack"></i>
+                <span class="pin-text">Pin Sidebar</span>
+            </button>
+            
+            <div class="user-section">
+                <div class="user-avatar">JD</div>
+                <div class="user-info">
+                    <div class="user-name">John Doe</div>
+                    <div class="user-role">Analytics Manager</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="content" id="content">
+        <h1>Eagle Analytics Dashboard</h1>
+        <p>Welcome to the Eagle Analytics platform. The sidebar is now configured with:</p>
+        <ul style="text-align: left; max-width: 500px; margin: 20px auto;">
+            <li><strong>Vertically centered top navigation</strong> (Home and Scorecards)</li>
+            <li><strong>Bottom-aligned support links</strong> (Help and Feedback)</li>
+            <li><strong>Clean, empty content area</strong> ready for your application</li>
+        </ul>
+        <p>Hover over the sidebar to expand it, or click the pin button to keep it open.</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const pinToggle = document.getElementById('pinToggle');
+            const navLinks = document.querySelectorAll('.nav-links li a, .bottom-links li a');
+            
+            // Initialize pin state from localStorage if available
+            const isPinned = localStorage.getItem('sidebarPinned') === 'true';
+            if (isPinned) {
+                sidebar.classList.add('pinned');
+                pinToggle.classList.add('active');
+                pinToggle.querySelector('.pin-text').textContent = 'Unpin Sidebar';
+            }
+            
+            // Toggle pin state
+            pinToggle.addEventListener('click', function() {
+                if (sidebar.classList.contains('pinned')) {
+                    // Unpin the sidebar
+                    sidebar.classList.remove('pinned');
+                    pinToggle.classList.remove('active');
+                    pinToggle.querySelector('.pin-text').textContent = 'Pin Sidebar';
+                    localStorage.setItem('sidebarPinned', 'false');
+                } else {
+                    // Pin the sidebar
+                    sidebar.classList.add('pinned');
+                    pinToggle.classList.add('active');
+                    pinToggle.querySelector('.pin-text').textContent = 'Unpin Sidebar';
+                    localStorage.setItem('sidebarPinned', 'true');
+                }
+            });
+            
+            // Handle link clicks
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all links
+                    navLinks.forEach(item => {
+                        item.parentElement.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked link
+                    this.parentElement.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
