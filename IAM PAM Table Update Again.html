@@ -1,0 +1,1725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identity Risk Management Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #f8fafc;
+            padding: 24px;
+            font-family: 'Urbanist', sans-serif;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 5px 30px rgba(0, 82, 204, 0.08);
+            overflow: hidden;
+            /* border: 1px solid #e2e8f0; */
+        }
+        
+        .filters {
+            padding: 20px 32px;
+            background-color: #ffffff;
+            /* border-bottom: 1px solid #e2e8f0; */
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Urbanist', sans-serif;
+        }
+        
+        .filter-select {
+            CONTAIN-INTRINSIC-BLOCK-SIZE: AUTO 100PX;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 0px solid #cbd5e1;
+            background-color: #ecf0f7;
+            font-weight: 500;
+            color: #475569;
+            min-width: 160px;
+            font-family: 'Urbanist', sans-serif;
+        }
+        
+        .search-box {
+            flex-grow: 1;
+            max-width: 300px;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px 10px 42px;
+            border-radius: 8px;
+            border: 0px solid #cbd5e1;
+            font-size: 15px;
+            font-family: 'Urbanist', sans-serif;
+            background-color: #ecf0f6;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6597e1;
+        }
+        
+        /* PwC Scope Toggle Button */
+        .pwc-toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .pwc-toggle-label {
+            font-weight: 500;
+            color: #475569;
+            font-family: 'Urbanist', sans-serif;
+            font-size: 15px;
+        }
+        
+        .pwc-toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .pwc-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .pwc-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .pwc-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .pwc-slider {
+            background-color: #6597e1;
+        }
+        
+        input:checked + .pwc-slider:before {
+            transform: translateX(30px);
+        }
+        
+        /* Filter and Export buttons */
+        .filter-buttons {
+            display: flex;
+            gap: 12px;
+            margin-left: auto;
+        }
+        
+        .filter-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            background-color: #ecf0f7;
+            border: 0px solid #cbd5e1;
+            color: #475569;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Urbanist', sans-serif;
+        }
+        
+        .filter-btn:hover {
+            background-color: #f1f5f9;
+        }
+        
+        .export-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            background-color: #ecf0f8;
+            border: 0px solid #818790;
+            color: #475569;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Urbanist', sans-serif;
+        }
+        
+        .export-btn:hover {
+            background-color: #2563eb;
+            border-color: #2563eb;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            padding: 0 5px 0 5px;
+            max-height: 700px; /* Limit table height for 10 rows */
+            overflow-y: auto; /* Enable vertical scrolling */
+            position: relative; /* Needed for fixed header */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1600px;
+            font-family: 'Urbanist', sans-serif;
+            table-layout: fixed; /* Ensures consistent column widths */
+        }
+
+        /* Table headings text wrap and font size adjustments */
+        thead {
+            background-color: #f7faff;
+            border-bottom: 0px solid #e2e8f0;
+            position: sticky; /* This makes the header sticky */
+            top: 0; /* Stick to the top of the container */
+            z-index: 10; /* Ensure header stays above content */
+        }
+
+        thead tr {
+            position: sticky; /* Ensure the row stays sticky */
+            top: 0;
+            z-index: 10;
+        }
+        
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        th {
+            padding: 16px 12px;
+            font-size: 14px; /* Slightly smaller */
+            font-weight: 900;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background-color: #f6f7f9;
+            text-align: left;
+            vertical-align: middle;
+            white-space: normal; /* Allow text wrapping */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            line-height: 1.3;
+            height: 70px; /* Give more vertical space for wrapped text */
+            position: sticky; /* Make each header cell sticky too */
+            top: 0;
+            z-index: 11; /* Higher than the row z-index */
+            box-shadow: 0 1px 0 #e2e8f0; /* Add subtle bottom border */
+            /*position: relative;*/
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s ease;
+        }
+
+        /* Column Sorting Styles */
+        th:hover {
+            background-color: #e0f2fe;
+        }
+
+        .sort-icon {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            opacity: 0.6;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        th:hover .sort-icon {
+            opacity: 1;
+        }
+
+        th[data-sort="asc"] {
+            background-color: #dbeafe;
+            box-shadow: inset 0 2px 0 #3b82f6;
+        }
+
+        th[data-sort="desc"] {
+            background-color: #dbeafe;
+            box-shadow: inset 0 2px 0 #3b82f6;
+        }
+
+        th[data-sort="asc"] .sort-icon::after {
+            content: " ↑";
+            font-weight: bold;
+            opacity: 1;
+        }
+
+        th[data-sort="desc"] .sort-icon::after {
+            content: " ↓";
+            font-weight: bold;
+            opacity: 1;
+        }
+
+        th[data-sort="none"] .sort-icon::after {
+            content: " ↕";
+            opacity: 0.6;
+        }
+
+        /* Add focus styles for accessibility */
+        th:focus {
+            border-top: 2px solid #3b82f6;
+            /*outline-offset: -2px;*/
+        }
+
+        /* Animation for sort icon */
+        @keyframes sort-pulse {
+            0% { transform: translateY(-50%) scale(1); }
+            50% { transform: translateY(-50%) scale(1.2); }
+            100% { transform: translateY(-50%) scale(1); }
+        }
+
+        th[data-sort="asc"] .sort-icon,
+        th[data-sort="desc"] .sort-icon {
+            animation: sort-pulse 0.3s ease;
+        }
+
+        /* Smaller font size for table content */
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px; /* Reduced from 15px */
+            font-family: 'Urbanist', sans-serif;
+            vertical-align: middle;
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* Column width definitions for consistent layout */
+        th:nth-child(1), td:nth-child(1) { width: 12%; } /* IT Service */
+        th:nth-child(2), td:nth-child(2) { width: 10%; } /* CI ID */
+        th:nth-child(3), td:nth-child(3) { width: 8%; }  /* Last Testing Date */
+        th:nth-child(4), td:nth-child(4) { width: 10%; } /* Predictive Audit Score */
+        th:nth-child(5), td:nth-child(5) { width: 8%; }  /* Audit Scope */
+        th:nth-child(6), td:nth-child(6) { width: 8%; }  /* TCF Critical */
+        th:nth-child(7), td:nth-child(7) { width: 9%; }  /* Password Rotation */
+        th:nth-child(8), td:nth-child(8) { width: 9%; }  /* Session Management */
+        th:nth-child(9), td:nth-child(9) { width: 9%; }  /* Breakglass Accounts */
+        th:nth-child(10), td:nth-child(10) { width: 8%; }  /* Monitoring */
+        th:nth-child(11), td:nth-child(11) { width: 9%; } /* Justified Check-out */
+        th:nth-child(12), td:nth-child(12) { width: 9%; } /* Safe Naming */
+        
+        .service-cell {
+            font-weight: 600;
+            color: #475569;
+            font-family: 'Urbanist', sans-serif;
+        }
+        
+        .ci-id-cell {
+            font-family: 'Urbanist', monospace;
+            color: #475569;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Modern Calendar Icon with Blue Top */
+        .calendar-icon {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            width: 48px;
+            height: 48px;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            /* border: 0.25px solid #e5e7eb; */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 0 auto;
+        }
+        
+        .calendar-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .calendar-month {
+            background: linear-gradient(to right, #6597e1, #6597e1); /* Blue color scheme */
+            color: white;
+            width: 100%;
+            text-align: center;
+            padding: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'Urbanist', sans-serif;
+        }
+        
+        .calendar-date {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            font-size: 18px;
+            font-weight: 700;
+            color: #475569;
+            font-family: 'Urbanist', sans-serif;
+        }
+        
+        /* Circular Percentage Chart for Predictive Audit Score */
+        .circular-chart-container {
+            position: relative;
+            width: 70px;
+            height: 70px;
+            margin: 0 auto;
+        }
+        
+        /* Circular Percentage Chart for Predictive Audit Score */
+        .circular-chart-container {
+            position: relative;
+            width: 70px;
+            height: 70px;
+            margin: 0 auto;
+            cursor: pointer;
+        }
+
+        .circular-chart-svg {
+            width: 70px;
+            height: 70px;
+            transform: rotate(-90deg);
+        }
+
+        .circular-bg {
+            fill: none;
+            stroke: #e2e8f0;
+            stroke-width: 9;
+        }
+
+        .circular-fill {
+            fill: none;
+            stroke-width: 9;
+            stroke-linecap: round;
+            stroke-dasharray: 283; /* Circumference for 45px radius */
+            stroke-dashoffset: 283;
+            transition: stroke-dashoffset 0.8s ease, stroke 0.5s ease; /* Medium speed animation */
+            transform-origin: center;
+        }
+
+        /* Hover effect for the entire container */
+        .circular-chart-container:hover .circular-fill {
+            animation: circular-fill-animation 0.8s ease forwards; /* Medium speed animation */
+        }
+
+        .circular-chart-container:hover .circular-value {
+            animation: value-pulse 0.8s ease; /* Add subtle pulse to value */
+        }
+
+        /* Animation for filling the circle */
+        @keyframes circular-fill-animation {
+            0% {
+                stroke-dashoffset: 283; /* Start from empty (0%) */
+            }
+            100% {
+                /* End at the calculated position - we'll use inline style for this */
+            }
+        }
+
+        /* Optional: Add a subtle pulse animation to the value */
+        @keyframes value-pulse {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+        
+        .circular-bg {
+            fill: none;
+            stroke: #e2e8f0;
+            stroke-width: 9;
+        }
+        
+        .circular-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 700;
+            font-size: 18px;
+            color: #475569;
+            font-family: 'Urbanist', sans-serif;
+            text-align: center;
+        }
+        
+        .circular-value::after {
+            content: '%';
+            font-size: 12px;
+            color: #64748b;
+            margin-left: 1px;
+        }
+        
+        /* Blue Audit Scope Pill */
+        .audit-scope-pill {
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+            text-align: center;
+            min-width: 70px;
+            font-family: 'Urbanist', sans-serif;
+            background-color: #6597e1; /* Blue color */
+            color: white;
+        }
+        
+        /* Blue Breakglass Accounts Pill */
+        .breakglass-pill {
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+            text-align: center;
+            min-width: 70px;
+            font-family: 'Urbanist', sans-serif;
+            background-color: #6597e1; /* Blue color */
+            color: white;
+        }
+        
+        /* Progress bars for all metrics */
+        .progress-column {
+            min-width: 120px;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: #e2e8f0;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s ease;
+            background-color: #6597e1; /* Solid blue */
+        }
+        
+        .progress-text {
+            font-size: 14px;
+            margin-top: 8px;
+            font-weight: 600;
+            color: #475569;
+            text-align: center;
+            font-family: 'Urbanist', sans-serif;
+        }
+        
+        .footer {
+            padding: 20px 32px;
+            background-color: #ffffff;
+            /* border-top: 1px solid #e2e8f0; */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #64748b;
+            font-family: 'Urbanist', sans-serif;
+        }
+        
+        .pagination {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .pagination-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ecf0f8;
+            border: 0px solid #cbd5e1;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Urbanist', sans-serif;
+        }
+        
+        .pagination-btn.active {
+            background-color: #6597e1;
+            color: white;
+            border-color: #6597e1;
+        }
+        
+        .pagination-btn:hover:not(.active) {
+            background-color: #f1f5f9;
+        }
+        
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination-btn:disabled:hover {
+            background-color: white;
+        }
+        
+        @media (max-width: 1200px) {
+            .container {
+                border-radius: 12px;
+            }
+            
+            .filters, .footer {
+                padding: 20px 24px;
+            }
+            
+            th, td {
+                padding: 14px 10px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                max-width: 100%;
+            }
+            
+            .filter-buttons {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            /* Ensure text wrap works on mobile */
+            th {
+                font-size: 12px;
+                padding: 12px 8px;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="filters">
+            <div class="filter-item">
+                <label for="status-filter">Business Unit:</label>
+                <select id="status-filter" class="filter-select">
+                    <option>IB&M</option>
+                    <option>Retail</option>
+                    <option>Technology</option>
+                </select>
+            </div>
+            
+            <div class="pwc-toggle-container">
+                <span class="pwc-toggle-label">PwC Scope:</span>
+                <label class="pwc-toggle">
+                    <input type="checkbox" id="pwc-toggle">
+                    <span class="pwc-slider"></span>
+                </label>
+            </div>
+
+            <div class="pwc-toggle-container">
+                <span class="pwc-toggle-label">TCF Critical:</span>
+                <label class="pwc-toggle">
+                    <input type="checkbox" id="tcf-toggle">
+                    <span class="pwc-slider"></span>
+                </label>
+            </div>
+            
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search services..." id="search-input">
+            </div>
+            
+            <div class="filter-buttons">
+                <button class="export-btn">
+                    <i class="fas fa-download" style="color: #6597e1;"></i> Export Report
+                </button>
+                <button class="filter-btn">
+                    <i class="fas fa-filter" style="color: #3b82f6;"></i> Filter
+                </button>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table id="data-table">
+                <thead>
+                    <tr>
+                        <th data-column="service" data-sort="none">
+                            IT Service <span class="sort-icon"></span>
+                        </th>
+                        <th data-column="ciId" data-sort="none">
+                            CI ID <span class="sort-icon"></span>
+                        </th>
+                        <th data-column="lastTestDate" data-sort="none">
+                            Last Testing Date <span class="sort-icon"></span>
+                        </th>
+                        <th data-column="predictiveAuditScore" data-sort="none">
+                            Predictive Audit Score <span class="sort-icon"></span>
+                        </th>
+                        <th data-column="auditScope" data-sort="none">
+                            Audit Scope <span class="sort-icon"></span>
+                        </th>
+                        <th data-column="tcfCritical" data-sort="none">
+                            TCF Critical <span class="sort-icon"></span>
+                        </th>
+                        <th data-column="passwordRotation" data-sort="none">
+                            Password Rotation <span class="sort-icon"></span>
+                        </th>
+                        <th data-column="sessionManagement" data-sort="none">
+                            Session Management <span class="sort-icon"></span>
+                        </th>
+                        <th data-column="breakglassAccounts" data-sort="none">
+                            Breakglass Accounts <span class="sort-icon"></span>
+                        </th>
+                        <th data-column="monitoring" data-sort="none">
+                            Monitoring <span class="sort-icon"></span>
+                        </th>
+                        <th data-column="justifiedCheckout" data-sort="none">
+                            Justified Check-out <span class="sort-icon"></span>
+                        </th>
+                        <th data-column="safeNaming" data-sort="none">
+                            Safe Naming <span class="sort-icon"></span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <!-- Table rows will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="footer">
+            <div class="footer-info" id="page-info">
+                Showing <span id="start-row">1</span> to <span id="end-row">10</span> of <span id="total-rows">15</span> IT services
+            </div>
+            <div class="pagination">
+                <button class="pagination-btn" id="first-page">
+                    <i class="fas fa-angle-double-left"></i>
+                </button>
+                <button class="pagination-btn" id="prev-page">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="pagination-btn active" data-page="1">1</button>
+                <button class="pagination-btn" data-page="2">2</button>
+                <button class="pagination-btn" id="next-page">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <button class="pagination-btn" id="last-page">
+                    <i class="fas fa-angle-double-right"></i>
+                </button>
+            </div>
+            <div class="footer-update">
+                Last updated: <span id="current-time"></span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Sample data for the table (15 rows for pagination)
+        const tableData = [
+            {
+                service: "Employee Portal",
+                ciId: "CI100234567",
+                lastTestDate: { month: "Jun", day: 15 },
+                predictiveAuditScore: 80,
+                auditScope: "PwC",
+                tcfCritical: "Yes",
+                passwordRotation: 95,
+                sessionManagement: 88,
+                breakglassAccounts: true,
+                monitoring: 95,
+                justifiedCheckout: 75,
+                safeNaming: 90
+            },
+            {
+                service: "Financial Reporting",
+                ciId: "CI100987654",
+                lastTestDate: { month: "Apr", day: 22 },
+                predictiveAuditScore: 50,
+                auditScope: "",
+                tcfCritical: "Yes",
+                passwordRotation: 30,
+                sessionManagement: 75,
+                breakglassAccounts: false,
+                monitoring: 65,
+                justifiedCheckout: 40,
+                safeNaming: 60
+            },
+            {
+                service: "CRM System",
+                ciId: "CI101112131",
+                lastTestDate: { month: "May", day: 8 },
+                predictiveAuditScore: 100,
+                auditScope: "PwC",
+                tcfCritical: "",
+                passwordRotation: 100,
+                sessionManagement: 100,
+                breakglassAccounts: true,
+                monitoring: 100,
+                justifiedCheckout: 95,
+                safeNaming: 98
+            },
+            {
+                service: "Legacy HR System",
+                ciId: "CI100001122",
+                lastTestDate: { month: "Feb", day: 14 },
+                predictiveAuditScore: 20,
+                auditScope: "",
+                tcfCritical: "Yes",
+                passwordRotation: 10,
+                sessionManagement: 25,
+                breakglassAccounts: false,
+                monitoring: 30,
+                justifiedCheckout: 15,
+                safeNaming: 35
+            },
+            {
+                service: "Customer Support Portal",
+                ciId: "CI102233445",
+                lastTestDate: { month: "Jun", day: 1 },
+                predictiveAuditScore: 70,
+                auditScope: "PwC",
+                tcfCritical: "",
+                passwordRotation: 90,
+                sessionManagement: 45,
+                breakglassAccounts: true,
+                monitoring: 85,
+                justifiedCheckout: 65,
+                safeNaming: 80
+            },
+            {
+                service: "Email Gateway",
+                ciId: "CI103344556",
+                lastTestDate: { month: "Mar", day: 10 },
+                predictiveAuditScore: 90,
+                auditScope: "",
+                tcfCritical: "",
+                passwordRotation: 85,
+                sessionManagement: 92,
+                breakglassAccounts: true,
+                monitoring: 88,
+                justifiedCheckout: 78,
+                safeNaming: 85
+            },
+            {
+                service: "Identity Provider",
+                ciId: "CI104455667",
+                lastTestDate: { month: "Jan", day: 5 },
+                predictiveAuditScore: 95,
+                auditScope: "PwC",
+                passwordRotation: 98,
+                sessionManagement: 96,
+                breakglassAccounts: true,
+                monitoring: 97,
+                justifiedCheckout: 92,
+                safeNaming: 96
+            },
+            {
+                service: "Database Server",
+                ciId: "CI105566778",
+                lastTestDate: { month: "Jul", day: 3 },
+                predictiveAuditScore: 60,
+                auditScope: "",
+                passwordRotation: 70,
+                sessionManagement: 65,
+                breakglassAccounts: false,
+                monitoring: 75,
+                justifiedCheckout: 55,
+                safeNaming: 70
+            },
+            {
+                service: "VPN Service",
+                ciId: "CI106677889",
+                lastTestDate: { month: "May", day: 18 },
+                predictiveAuditScore: 85,
+                auditScope: "PwC",
+                passwordRotation: 92,
+                sessionManagement: 87,
+                breakglassAccounts: true,
+                monitoring: 90,
+                justifiedCheckout: 80,
+                safeNaming: 88
+            },
+            {
+                service: "File Share",
+                ciId: "CI107788990",
+                lastTestDate: { month: "Apr", day: 30 },
+                predictiveAuditScore: 40,
+                auditScope: "",
+                passwordRotation: 50,
+                sessionManagement: 35,
+                breakglassAccounts: false,
+                monitoring: 45,
+                justifiedCheckout: 30,
+                safeNaming: 50
+            },
+            {
+                service: "Development Platform",
+                ciId: "CI108899001",
+                lastTestDate: { month: "Feb", day: 25 },
+                predictiveAuditScore: 75,
+                auditScope: "PwC",
+                passwordRotation: 80,
+                sessionManagement: 70,
+                breakglassAccounts: true,
+                monitoring: 82,
+                justifiedCheckout: 68,
+                safeNaming: 78
+            },
+            {
+                service: "Backup System",
+                ciId: "CI109900112",
+                lastTestDate: { month: "Jun", day: 12 },
+                predictiveAuditScore: 65,
+                auditScope: "",
+                passwordRotation: 60,
+                sessionManagement: 68,
+                breakglassAccounts: false,
+                monitoring: 72,
+                justifiedCheckout: 58,
+                safeNaming: 65
+            },
+            {
+                service: "Network Monitoring",
+                ciId: "CI110011223",
+                lastTestDate: { month: "Mar", day: 7 },
+                predictiveAuditScore: 55,
+                auditScope: "PwC",
+                passwordRotation: 65,
+                sessionManagement: 50,
+                breakglassAccounts: true,
+                monitoring: 60,
+                justifiedCheckout: 48,
+                safeNaming: 62
+            },
+            {
+                service: "API Gateway",
+                ciId: "CI111122334",
+                lastTestDate: { month: "Jan", day: 20 },
+                predictiveAuditScore: 45,
+                auditScope: "",
+                passwordRotation: 55,
+                sessionManagement: 40,
+                breakglassAccounts: false,
+                monitoring: 50,
+                justifiedCheckout: 42,
+                safeNaming: 55
+            },
+            {
+                service: "Mobile App Backend",
+                ciId: "CI112233445",
+                lastTestDate: { month: "May", day: 29 },
+                predictiveAuditScore: 82,
+                auditScope: "PwC",
+                passwordRotation: 88,
+                sessionManagement: 85,
+                breakglassAccounts: true,
+                monitoring: 91,
+                justifiedCheckout: 76,
+                safeNaming: 84
+            }
+        ];
+
+        // Pagination variables - CHANGED: 10 rows per page
+        let currentPage = 1;
+        const rowsPerPage = 10; // Changed from 5 to 10
+        const totalRows = tableData.length;
+        let pwcFilterActive = false;
+        let tcfFilterActive = false;
+        let searchFilterActive = false;
+        let searchTerm = "";
+
+        // Function to update the current time
+        function updateCurrentTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            document.getElementById('current-time').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // Function to get color based on score with pastel colors
+        function getColorForScore(score) {
+            // Modern pastel colors
+            if (score < 50) {
+                // Pastel red: #ee8993 (light pink-red)
+                return '#ee8993';
+            } else if (score >= 50 && score < 80) {
+                // Pastel amber: #f3d187 (light orange)
+                return '#f3d187';
+            } else {
+                // Pastel green: #a2da9b (light green)
+                return '#a2da9b';
+            }
+        }
+
+        // Function to create circular percentage chart for predictive audit score
+        function createCircularChart(score) {
+            // Calculate stroke-dashoffset based on score (0-100)
+            const circumference = 283; // 2 * π * 45 (radius)
+            const dashOffset = circumference - (score * circumference / 100);
+            
+            // Get color based on score using the new function
+            const fillColor = getColorForScore(score);
+            
+            return `
+                <div class="circular-chart-container">
+                    <svg class="circular-chart-svg" viewBox="0 0 100 100">
+                        <circle class="circular-bg" cx="50" cy="50" r="45" />
+                        <circle class="circular-fill" 
+                                cx="50" cy="50" r="45" 
+                                style="stroke-dashoffset: ${dashOffset}; stroke: ${fillColor};" />
+                    </svg>
+                    <div class="circular-value">${score}</div>
+                </div>
+            `;
+        }
+
+        // Function to set up circular chart hover animations
+        function setupCircularChartAnimations() {
+            const circularContainers = document.querySelectorAll('.circular-chart-container');
+            
+            circularContainers.forEach(container => {
+                const circularFill = container.querySelector('.circular-fill');
+                const circularValue = container.querySelector('.circular-value');
+                const score = parseInt(circularValue.textContent);
+                
+                // Calculate stroke-dashoffset based on score (0-100)
+                const circumference = 283; // 2 * π * 45 (radius)
+                const dashOffset = circumference - (score * circumference / 100);
+                
+                // Store the final dashoffset for animation
+                circularFill.dataset.finalOffset = dashOffset;
+                
+                // Add hover event listeners
+                container.addEventListener('mouseenter', function() {
+                    // Reset to empty state
+                    circularFill.style.strokeDashoffset = circumference;
+                    
+                    // Trigger animation to fill
+                    setTimeout(() => {
+                        circularFill.style.strokeDashoffset = dashOffset;
+                    }, 10);
+                });
+                
+                container.addEventListener('mouseleave', function() {
+                    // Optional: Add reverse animation on mouse leave
+                    setTimeout(() => {
+                        circularFill.style.strokeDashoffset = dashOffset;
+                    }, 10);
+                });
+            });
+        }
+
+        // Function to filter data based on PwC Scope toggle and search
+        function getFilteredData() {
+            let filteredData = tableData;
+            
+            // Apply PwC filter if active
+            if (pwcFilterActive) {
+                filteredData = filteredData.filter(item => item.auditScope === "PwC");
+            }
+
+            // Apply TCF filter if active
+            if (tcfFilterActive) {
+                filteredData = filteredData.filter(item => item.tcfCritical === "Yes");
+            }
+            
+            // Apply search filter if active
+            if (searchFilterActive && searchTerm !== "") {
+                filteredData = filteredData.filter(item => 
+                    item.service.toLowerCase().includes(searchTerm) ||
+                    item.ciId.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            return filteredData;
+        }
+
+        // Function to render table rows for the current page
+        function renderTableRows() {
+            const tableBody = document.getElementById('table-body');
+            tableBody.innerHTML = '';
+            
+            const filteredData = getFilteredData();
+            const filteredTotalRows = filteredData.length;
+            const filteredTotalPages = Math.ceil(filteredTotalRows / rowsPerPage);
+            
+            // Ensure current page is valid for filtered data
+            if (currentPage > filteredTotalPages && filteredTotalPages > 0) {
+                currentPage = filteredTotalPages;
+            } else if (filteredTotalPages === 0) {
+                currentPage = 1;
+            }
+            
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, filteredTotalRows);
+            
+            // Update page info
+            document.getElementById('start-row').textContent = filteredTotalRows > 0 ? startIndex + 1 : 0;
+            document.getElementById('end-row').textContent = endIndex;
+            document.getElementById('total-rows').textContent = filteredTotalRows;
+            
+            // Render rows for current page
+            for (let i = startIndex; i < endIndex; i++) {
+                const rowData = filteredData[i];
+                const row = document.createElement('tr');
+                
+                // Create calendar icon HTML with blue top
+                const calendarIcon = `
+                    <div class="calendar-icon">
+                        <div class="calendar-month">${rowData.lastTestDate.month}</div>
+                        <div class="calendar-date">${rowData.lastTestDate.day}</div>
+                    </div>
+                `;
+                
+                // Create circular chart for predictive audit score
+                const predictiveAuditScore = createCircularChart(rowData.predictiveAuditScore);
+                
+                // Create audit scope pill or empty cell
+                const auditScope = rowData.auditScope ? 
+                    `<span class="audit-scope-pill">${rowData.auditScope}</span>` : '';
+
+                // Create audit scope pill or empty cell
+                const tcfCritical = rowData.tcfCritical ? 
+                    `<span class="audit-scope-pill">${rowData.tcfCritical}</span>` : '';
+                
+                // Create breakglass accounts pill (only show for "Yes")
+                const breakglassPill = rowData.breakglassAccounts ? 
+                    '<span class="breakglass-pill">Yes</span>' : '';
+                
+                // Create table row HTML with all columns
+                row.innerHTML = `
+                    <td class="service-cell">${rowData.service}</td>
+                    <td class="ci-id-cell">${rowData.ciId}</td>
+                    <td style="text-align: center;">${calendarIcon}</td>
+                    <td style="text-align: center;">${predictiveAuditScore}</td>
+                    <td style="text-align: center;">${auditScope}</td>
+                    <td style="text-align: center;">${tcfCritical}</td>
+                    <td class="progress-column" style="text-align: center;">
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: ${rowData.passwordRotation}%;"></div>
+                        </div>
+                        <div class="progress-text">${rowData.passwordRotation}%</div>
+                    </td>
+                    <td class="progress-column" style="text-align: center;">
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: ${rowData.sessionManagement}%;"></div>
+                        </div>
+                        <div class="progress-text">${rowData.sessionManagement}%</div>
+                    </td>
+                    <td style="text-align: center;">${breakglassPill}</td>
+                    <td class="progress-column" style="text-align: center;">
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: ${rowData.monitoring}%;"></div>
+                        </div>
+                        <div class="progress-text">${rowData.monitoring}%</div>
+                    </td>
+                    <td class="progress-column" style="text-align: center;">
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: ${rowData.justifiedCheckout}%;"></div>
+                        </div>
+                        <div class="progress-text">${rowData.justifiedCheckout}%</div>
+                    </td>
+                    <td class="progress-column" style="text-align: center;">
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: ${rowData.safeNaming}%;"></div>
+                        </div>
+                        <div class="progress-text">${rowData.safeNaming}%</div>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            }
+            
+            // Update pagination buttons after rendering rows
+            updatePaginationButtons();
+            
+            // Add event listeners to new rows
+            addRowEventListeners();
+        }
+
+        // After rendering, set up animations
+        setupCircularChartAnimations();
+
+        // Function to rebuild pagination buttons based on filtered results
+        function rebuildPaginationButtons() {
+            const filteredData = getFilteredData();
+            const filteredTotalRows = filteredData.length;
+            const filteredTotalPages = Math.ceil(filteredTotalRows / rowsPerPage);
+            
+            // Get pagination container
+            const paginationContainer = document.querySelector('.pagination');
+            
+            // Remove all page number buttons (keep first, prev, next, last buttons)
+            const pageButtons = document.querySelectorAll('.pagination-btn[data-page]');
+            pageButtons.forEach(btn => btn.remove());
+            
+            // Add page number buttons based on filtered results
+            for (let i = 1; i <= filteredTotalPages; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = 'pagination-btn';
+                pageBtn.setAttribute('data-page', i);
+                pageBtn.textContent = i;
+                
+                // Insert before the next-page button
+                const nextPageBtn = document.getElementById('next-page');
+                paginationContainer.insertBefore(pageBtn, nextPageBtn);
+            }
+        }
+
+        // Function to update pagination buttons
+        function updatePaginationButtons() {
+            const filteredData = getFilteredData();
+            const filteredTotalRows = filteredData.length;
+            const filteredTotalPages = Math.ceil(filteredTotalRows / rowsPerPage);
+            
+            // Remove active class from all page buttons
+            document.querySelectorAll('.pagination-btn[data-page]').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to current page button
+            const activeBtn = document.querySelector(`.pagination-btn[data-page="${currentPage}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+            
+            // Update prev/next button states
+            document.getElementById('prev-page').disabled = currentPage === 1;
+            document.getElementById('first-page').disabled = currentPage === 1;
+            document.getElementById('next-page').disabled = currentPage === filteredTotalPages || filteredTotalPages === 0;
+            document.getElementById('last-page').disabled = currentPage === filteredTotalPages || filteredTotalPages === 0;
+            
+            // Update page number buttons visibility
+            const pageButtons = document.querySelectorAll('.pagination-btn[data-page]');
+            pageButtons.forEach(btn => {
+                const pageNum = parseInt(btn.getAttribute('data-page'));
+                
+                // Always show all page buttons (we'll have the exact number)
+                btn.style.display = 'flex';
+                
+                // Limit to showing max 5 page buttons for better UI
+                if (filteredTotalPages > 5) {
+                    if (pageNum === currentPage || 
+                        pageNum === currentPage - 1 || 
+                        pageNum === currentPage + 1 ||
+                        pageNum === 1 || 
+                        pageNum === filteredTotalPages) {
+                        btn.style.display = 'flex';
+                    } else {
+                        btn.style.display = 'none';
+                    }
+                    
+                    // Handle edge cases for first and last pages
+                    if (currentPage <= 2) {
+                        if (pageNum <= 3 || pageNum === filteredTotalPages) {
+                            btn.style.display = 'flex';
+                        }
+                    }
+                    
+                    if (currentPage >= filteredTotalPages - 1) {
+                        if (pageNum >= filteredTotalPages - 2 || pageNum === 1) {
+                            btn.style.display = 'flex';
+                        }
+                    }
+                }
+            });
+        }
+
+        // Function to change page
+        function goToPage(page) {
+            const filteredData = getFilteredData();
+            const filteredTotalRows = filteredData.length;
+            const filteredTotalPages = Math.ceil(filteredTotalRows / rowsPerPage);
+            
+            if (page < 1 || page > filteredTotalPages) return;
+            
+            currentPage = page;
+            renderTableRows();
+        }
+
+        // Function to add event listeners to table rows
+        function addRowEventListeners() {
+            const tableRows = document.querySelectorAll('#table-body tr');
+            
+            tableRows.forEach(row => {
+                row.addEventListener('click', function() {
+                    // Remove active class from all rows
+                    tableRows.forEach(r => r.classList.remove('active-row'));
+                    // Add active class to clicked row
+                    this.classList.add('active-row');
+                    
+                    // In a real app, this would trigger a detail view
+                    console.log('Selected service:', this.cells[0].textContent.trim());
+                });
+                
+                // Add hover effects to progress columns
+                const progressColumns = row.querySelectorAll('.progress-column');
+                progressColumns.forEach(col => {
+                    col.addEventListener('mouseenter', function() {
+                        this.style.transform = 'scale(1.02)';
+                        this.style.transition = 'transform 0.2s';
+                    });
+                    
+                    col.addEventListener('mouseleave', function() {
+                        this.style.transform = 'scale(1)';
+                    });
+                });
+                
+                // Add hover effects to pills
+                const pills = row.querySelectorAll('.audit-scope-pill, .breakglass-pill');
+                pills.forEach(pill => {
+                    pill.addEventListener('mouseenter', function() {
+                        this.style.transform = 'scale(1.05)';
+                        this.style.transition = 'transform 0.2s';
+                    });
+                    
+                    pill.addEventListener('mouseleave', function() {
+                        this.style.transform = 'scale(1)';
+                    });
+                });
+                
+                // Add hover effects to calendar icons
+                const calendarIcons = row.querySelectorAll('.calendar-icon');
+                calendarIcons.forEach(icon => {
+                    icon.addEventListener('mouseenter', function() {
+                        this.style.transform = 'translateY(-2px)';
+                    });
+                    
+                    icon.addEventListener('mouseleave', function() {
+                        this.style.transform = 'translateY(0)';
+                    });
+                });
+                
+                // Add hover effects to circular charts
+                const circularCharts = row.querySelectorAll('.circular-chart-container');
+                circularCharts.forEach(chart => {
+                    chart.addEventListener('mouseenter', function() {
+                        this.style.transform = 'scale(1.05)';
+                        this.style.transition = 'transform 0.3s';
+                    });
+                    
+                    chart.addEventListener('mouseleave', function() {
+                        this.style.transform = 'scale(1)';
+                    });
+                });
+            });
+        }
+
+        // Function to handle filter changes
+        function handleFilterChange() {
+            currentPage = 1; // Reset to first page when filter changes
+
+            // Reset sorting when filter changes
+            document.querySelectorAll('th[data-column]').forEach(th => {
+                th.setAttribute('data-sort', 'none');
+            });
+            currentSortColumn = null;
+            currentSortDirection = 'none';
+            
+            // Rebuild pagination buttons based on filtered results
+            rebuildPaginationButtons();
+            
+            // Render the table with new filtered data
+            renderTableRows();
+        }
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // Set initial time
+            updateCurrentTime();
+
+            // Update time every minute
+            setInterval(updateCurrentTime, 60000);
+            
+            // Add event listener to PwC toggle
+            document.getElementById('pwc-toggle').addEventListener('change', function() {
+                pwcFilterActive = this.checked;
+                handleFilterChange();
+            });
+
+            // Add event listener to PwC toggle
+            document.getElementById('tcf-toggle').addEventListener('change', function() {
+                tcfFilterActive = this.checked;
+                handleFilterChange();
+            });
+            
+            // Add event listeners to pagination buttons
+            document.getElementById('first-page').addEventListener('click', () => goToPage(1));
+            document.getElementById('prev-page').addEventListener('click', () => goToPage(currentPage - 1));
+            document.getElementById('next-page').addEventListener('click', () => goToPage(currentPage + 1));
+            document.getElementById('last-page').addEventListener('click', () => {
+                const filteredData = getFilteredData();
+                const filteredTotalRows = filteredData.length;
+                const filteredTotalPages = Math.ceil(filteredTotalRows / rowsPerPage);
+                goToPage(filteredTotalPages);
+            });
+            
+            // Add event listeners to page number buttons (using event delegation)
+            document.querySelector('.pagination').addEventListener('click', function(e) {
+                if (e.target.matches('.pagination-btn[data-page]')) {
+                    const page = parseInt(e.target.getAttribute('data-page'));
+                    goToPage(page);
+                }
+            });
+            
+            // Add search functionality
+            document.getElementById('search-input').addEventListener('input', function(e) {
+                searchTerm = e.target.value.toLowerCase().trim();
+                searchFilterActive = searchTerm !== "";
+                handleFilterChange();
+            });
+            
+            // Build initial pagination buttons
+            rebuildPaginationButtons();
+            
+            // Render initial table
+            renderTableRows();
+            
+            // Setup column sorting
+            setupColumnSorting();
+            
+            // Add search functionality
+            document.getElementById('search-input').addEventListener('input', function(e) {
+                searchTerm = e.target.value.toLowerCase().trim();
+                searchFilterActive = searchTerm !== "";
+                handleFilterChange();
+                
+                // Reset sorting when searching
+                if (currentSortColumn) {
+                    updateSortingIndicators(currentSortColumn, 'none');
+                    currentSortColumn = null;
+                    currentSortDirection = 'none';
+                }
+            });
+
+            // Initialize sorting functionality
+            initializeSorting();
+            
+            // Add event listener to PwC toggle
+            document.getElementById('pwc-toggle').addEventListener('change', function() {
+                pwcFilterActive = this.checked;
+                handleFilterChange();
+            });
+
+
+        });
+
+        // Add some CSS for the active row
+        const style = document.createElement('style');
+        style.textContent = `
+            .active-row {
+                background-color: #f0f9ff !important;
+                box-shadow: inset 3px 0 0 0 #3b82f6;
+            }
+            
+            .active-row td {
+                border-color: #e0f2fe;
+            }
+            
+            .audit-scope-pill, .breakglass-pill {
+                transition: all 0.2s ease;
+            }
+            
+            .progress-column {
+                transition: all 0.2s ease;
+            }
+            
+            .calendar-icon {
+                transition: all 0.2s ease;
+            }
+            
+            .circular-chart-container {
+                transition: all 0.3s ease;
+            }
+            
+            /* Ensure all content is properly centered */
+            td {
+                text-align: center;
+            }
+            
+            .service-cell, .ci-id-cell {
+                text-align: left;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Table sorting function
+        let currentSortColumn = null;
+        let currentSortDirection = 'none'; // 'none', 'asc', 'desc'
+
+        // Function to sort table data
+        function sortTableData(column, direction) {
+            const filteredData = getFilteredData();
+            
+            if (direction === 'none') {
+                // If no sorting, use original order
+                renderTableRows();
+                return;
+            }
+            
+            // Convert direction to a multiplier for comparison
+            const multiplier = direction === 'asc' ? 1 : -1;
+            
+            filteredData.sort((a, b) => {
+                let aValue, bValue;
+                
+                switch(column) {
+                    case 'service':
+                        aValue = a.service.toLowerCase();
+                        bValue = b.service.toLowerCase();
+                        return aValue.localeCompare(bValue) * multiplier;
+                        
+                    case 'ciId':
+                        aValue = a.ciId.toLowerCase();
+                        bValue = b.ciId.toLowerCase();
+                        return aValue.localeCompare(bValue) * multiplier;
+                        
+                    case 'lastTestDate':
+                        // Convert to sortable date (using month and day)
+                        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                        aValue = months.indexOf(a.lastTestDate.month) * 100 + a.lastTestDate.day;
+                        bValue = months.indexOf(b.lastTestDate.month) * 100 + b.lastTestDate.day;
+                        return (aValue - bValue) * multiplier;
+                        
+                    case 'predictiveAuditScore':
+                        aValue = a.predictiveAuditScore;
+                        bValue = b.predictiveAuditScore;
+                        return (aValue - bValue) * multiplier;
+                        
+                    case 'auditScope':
+                        // Sort by whether it has PwC scope or not
+                        aValue = a.auditScope === "PwC" ? 1 : 0;
+                        bValue = b.auditScope === "PwC" ? 1 : 0;
+                        return (aValue - bValue) * multiplier;
+
+                    case 'tcfCritical':
+                        // Sort by whether it is TCF critical or not
+                        aValue = a.tcfCritical === "Yes" ? 1 : 0;
+                        bValue = b.tcfCritical === "Yes" ? 1 : 0;
+                        return (aValue - bValue) * multiplier;
+                        
+                    case 'passwordRotation':
+                        aValue = a.passwordRotation;
+                        bValue = b.passwordRotation;
+                        return (aValue - bValue) * multiplier;
+                        
+                    case 'sessionManagement':
+                        aValue = a.sessionManagement;
+                        bValue = b.sessionManagement;
+                        return (aValue - bValue) * multiplier;
+                        
+                    case 'breakglassAccounts':
+                        // Sort by boolean (true = 1, false = 0)
+                        aValue = a.breakglassAccounts ? 1 : 0;
+                        bValue = b.breakglassAccounts ? 1 : 0;
+                        return (aValue - bValue) * multiplier;
+                        
+                    case 'monitoring':
+                        aValue = a.monitoring;
+                        bValue = b.monitoring;
+                        return (aValue - bValue) * multiplier;
+                        
+                    case 'justifiedCheckout':
+                        aValue = a.justifiedCheckout;
+                        bValue = b.justifiedCheckout;
+                        return (aValue - bValue) * multiplier;
+                        
+                    case 'safeNaming':
+                        aValue = a.safeNaming;
+                        bValue = b.safeNaming;
+                        return (aValue - bValue) * multiplier;
+                        
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Update the tableData order
+            // First, create a map of service names to original indices for easier reordering
+            const serviceToIndex = new Map();
+            tableData.forEach((item, index) => {
+                serviceToIndex.set(item.service + item.ciId, index);
+            });
+            
+            // Create a new array with sorted order
+            const newOrder = filteredData.map(item => {
+                return tableData[serviceToIndex.get(item.service + item.ciId)];
+            });
+            
+            // Update tableData with sorted order
+            tableData.length = 0;
+            tableData.push(...newOrder);
+            
+            // Update sorting state
+            currentSortColumn = column;
+            currentSortDirection = direction;
+            
+            // Update header sorting indicators
+            updateSortingIndicators(column, direction);
+            
+            // Re-render the table
+            renderTableRows();
+        }
+
+        // Function to update sorting indicators in headers
+        function updateSortingIndicators(column, direction) {
+            // Reset all headers
+            document.querySelectorAll('th[data-column]').forEach(th => {
+                th.setAttribute('data-sort', 'none');
+            });
+            
+            // Set active sorting header
+            const activeHeader = document.querySelector(`th[data-column="${column}"]`);
+            if (activeHeader) {
+                activeHeader.setAttribute('data-sort', direction);
+            }
+        }
+
+        // Function to handle column header clicks - COMPLETE FIXED VERSION
+        function setupColumnSorting() {
+            document.querySelectorAll('th[data-column]').forEach(th => {
+                th.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    
+                    const column = this.getAttribute('data-column');
+                    const currentSort = this.getAttribute('data-sort');
+                    
+                    let nextSortDirection;
+                    
+                    // Determine next sort direction using 3-state cycle
+                    // 1st click: desc, 2nd click: asc, 3rd click: none, 4th click: desc (restart)
+                    if (currentSortColumn !== column) {
+                        // Clicking a different column: start fresh with descending
+                        nextSortDirection = 'desc';
+                    } else {
+                        // Clicking the same column: cycle through the 3 states
+                        switch(currentSort) {
+                            case 'none':
+                                nextSortDirection = 'desc';
+                                break;
+                            case 'desc':
+                                nextSortDirection = 'asc';
+                                break;
+                            case 'asc':
+                                nextSortDirection = 'none';
+                                break;
+                            default:
+                                nextSortDirection = 'desc';
+                        }
+                    }
+                    
+                    // Sort the table with the new direction
+                    sortTableData(column, nextSortDirection);
+                    
+                    // Update the sort icon immediately for better UX
+                    this.setAttribute('data-sort', nextSortDirection);
+                });
+            });
+        }
+
+        // Function to add tooltips for sorting
+        function addSortingTooltips() {
+            document.querySelectorAll('th[data-column]').forEach(th => {
+                th.title = 'Click to sort';
+            });
+        }
+
+        // Function to initialize sorting
+        function initializeSorting() {
+            // Reset all headers to 'none' initially
+            document.querySelectorAll('th[data-column]').forEach(th => {
+                th.setAttribute('data-sort', 'none');
+            });
+            
+            setupColumnSorting();
+            addSortingTooltips();
+            
+            // Add keyboard accessibility
+            document.querySelectorAll('th[data-column]').forEach(th => {
+                th.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.click();
+                    }
+                });
+                
+                // Make headers focusable for accessibility
+                th.setAttribute('tabindex', '0');
+            });
+        }
+
+        // Function to reset to original order
+        function resetToOriginalOrder() {
+            // Restore tableData from originalTableData
+            tableData.length = 0;
+            tableData.push(...originalTableData.map(item => ({...item})));
+            
+            // Reset sorting state
+            currentSortColumn = null;
+            currentSortDirection = 'none';
+            updateSortingIndicators('', 'none');
+            
+            // Re-render
+            renderTableRows();
+        }
+
+    </script>
+</body>
+</html>
