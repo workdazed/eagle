@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Vertical Timeline</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Urbanist', sans-serif;
+            background-color: #f0f5fa;
+            color: #333;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .timeline-container {
+            max-width: 500px;
+            width: 100%;
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 82, 136, 0.1);
+            display: flex;
+            flex-direction: column;
+            /* Half the viewport height */
+            max-height: 50vh;
+        }
+        
+        .timeline-header {
+            padding: 25px 30px 20px;
+            text-align: center;
+            background-color: white;
+            border-radius: 16px 16px 0 0;
+            flex-shrink: 0;
+            border-bottom: 1px solid #f0f5fa;
+        }
+        
+        .timeline-header h1 {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 22px;
+            margin-bottom: 6px;
+        }
+        
+        .timeline-container {
+            display: flex;
+            flex-direction: column;
+            max-height: 50vh;
+        }
+
+        .timeline-header {
+            padding: 25px 30px 20px;
+            text-align: left;
+            background-color: white;
+            border-radius: 16px 16px 0 0;
+            flex-shrink: 0;
+            border-bottom: 1px solid #f0f5fa;
+        }
+
+        /* Add this instead: */
+        .timeline {
+            position: relative;
+            padding-top: 20px;
+            padding-bottom: 20px; /* Extra space at bottom */
+            margin-bottom: -30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 0;
+            bottom: 0;  /* Changed from height: 100% to bottom: 0 */
+            width: 3px;
+            background-color: #ddebfb;
+            z-index: 0;
+        }
+
+        /* Custom scrollbar styling */
+        .timeline-content {
+            padding: 0 30px 25px;
+            overflow-y: auto;
+            flex-grow: 1;
+            scroll-behavior: smooth;
+            position:  relative;
+        }
+
+        .timeline-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .timeline-content::-webkit-scrollbar-track {
+            background: #ffffff;
+            border-radius: 10px;
+            margin: 5px 0;
+        }
+
+        .timeline-content::-webkit-scrollbar-thumb {
+            background: #c6d9ee;
+            border-radius: 10px;
+        }
+
+        .timeline-content::-webkit-scrollbar-thumb:hover {
+            background: #4a9df0;
+        }
+        
+        /* Vertical line */
+        .timeline-content::before {
+            content: '';
+            position: absolute;
+            left: 36px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background-color: #ddebfb;
+            z-index: 0;
+        }
+        
+        .timeline-event {
+            position: relative;
+            margin-bottom: 22px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .timeline-event:last-child {
+            margin-bottom: 5px;
+        }
+        
+        /* Event marker */
+        .timeline-event::before {
+            content: '';
+            position: absolute;
+            left: 0px;
+            top: 20px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: #4a9df0;
+            z-index: 2;
+            border: 0px solid #010408;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease; /* NEW */
+        }
+
+        .timeline-event:hover .event-title {
+            color: #4a9df0; /* NEW */
+        }
+
+        .timeline-event:hover::before {
+            animation: simplePulse 1s infinite; /* NEW */
+        }
+        
+        .calendar-icon {
+            width: 54px;
+            height: 54px;
+            background-color: #f4f6f8;
+            border-radius: 10px;
+            display: flex;
+            margin-top: 0px;
+            margin-left: 30px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            /*box-shadow: 0 4px 10px rgba(74, 157, 240, 0.1);*/
+            border: 1px solid #e8f2fc;
+            flex-shrink: 0;
+            position: relative; /* NEW */
+            overflow: hidden; /* NEW */
+            transition: all 0.3s ease; /* NEW */
+            cursor: pointer; /* NEW */
+        }
+
+        .calendar-icon::before {
+            content: ''; /* NEW */
+            position: absolute; /* NEW */
+            top: -50%; /* NEW */
+            left: -60%; /* NEW */
+            width: 40%; /* NEW */
+            height: 200%; /* NEW */
+            background: linear-gradient( /* NEW */
+                to right, /* NEW */
+                rgba(255, 255, 255, 0) 0%, /* NEW */
+                rgba(255, 255, 255, 0.3) 50%, /* NEW */
+                rgba(255, 255, 255, 0) 100% /* NEW */
+            ); /* NEW */
+            transform: rotate(25deg); /* NEW */
+            transition: all 0.6s ease; /* NEW */
+        }
+
+        .calendar-icon:hover {
+            transform: translateY(-3px); /* NEW */
+            box-shadow: 0 8px 20px rgba(74, 157, 240, 0.15); /* NEW */
+            background-color: #e8f2fc; /* NEW */
+            /*border-color: #4a9df0; /* NEW */
+        }
+
+        .calendar-icon:hover::before {
+            left: 120%; /* NEW */
+        }
+        
+        .calendar-month {
+            font-size: 11px;
+            font-weight: 600;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+            transition: color 0.3s ease; /* NEW */
+            position: relative; /* NEW */
+            z-index: 1; /* NEW */
+        }
+        
+        .calendar-day {
+            font-size: 19px;
+            font-weight: 600;
+            color: #000000;
+            line-height: 1;
+            transition: color 0.3s ease; /* NEW */
+            position: relative; /* NEW */
+            z-index: 1; /* NEW */
+        }
+
+        .calendar-icon:hover .calendar-month,
+        .calendar-icon:hover .calendar-day {
+            color: #2c3e50; /* NEW */
+        }
+        
+        .event-content {
+            margin-left: 18px;
+            padding-top: 20px;
+            transition: transform 0.3s ease; /* NEW */
+        }
+
+        .timeline-event:hover .event-content {
+            transform: translateX(5px); /* NEW */
+        }
+        
+        .event-title {
+            font-weight: 800;
+            color: #2c3e50;
+            font-size: 15px;
+            line-height: 1.3;
+            margin-bottom: 0px;
+            transition: color 0.3s ease; /* NEW */
+        }
+                
+        .event-desc {
+            color: #7f8c8d;
+            font-size: 13px;
+            font-weight: 400;
+            line-height: 1.4;
+        }
+
+        @keyframes simplePulse { /* NEW */
+            0% { /* NEW */
+                transform: scale(1); /* NEW */
+                box-shadow: 0 0 0 0 rgba(74, 157, 240, 0.7); /* NEW */
+            } /* NEW */
+            50% { /* NEW */
+                transform: scale(1.1); /* NEW */
+            } /* NEW */
+            70% { /* NEW */
+                transform: scale(1.1); /* NEW */
+                box-shadow: 0 0 0 6px rgba(74, 157, 240, 0); /* NEW */
+            } /* NEW */
+            100% { /* NEW */
+                transform: scale(1); /* NEW */
+                box-shadow: 0 0 0 0 rgba(74, 157, 240, 0); /* NEW */
+            } /* NEW */
+        }
+
+        /* Add subtle shadow when scrolling
+        .timeline-content.scrolling::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 15px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.9), transparent);
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        .timeline-content.scrolling::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 15px;
+            background: linear-gradient(to top, rgba(255,255,255,0.9), transparent);
+            pointer-events: none;
+            z-index: 5;
+        }*/
+
+        /* Refresh button style */
+        .refresh-btn {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #4a9df0;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Urbanist', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background-color: #3a8ce0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 157, 240, 0.2);
+        }
+
+        /* Loading indicator */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #4a9df0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Optional: Add CSV upload form styles */
+        .csv-upload {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            border: 1px dashed #ddebfb;
+        }
+
+        .csv-upload input[type="file"] {
+            margin: 10px 0;
+        }
+
+        .csv-upload button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .timeline-container {
+                max-width: 450px;
+            }
+            
+            .timeline-header {
+                padding: 20px 20px 15px;
+            }
+            
+            .timeline-content {
+                padding: 0 20px 20px;
+            }
+
+            .timeline-content::before {
+                left: 18px;
+            }
+            
+            .timeline {
+                position: relative;
+                padding-left: 40px;
+            }
+            
+            .timeline::before {
+                left: 18px;
+            }
+            
+            .timeline-event::before {
+                left: -36px;
+            }
+            
+            .calendar-icon {
+                width: 48px;
+                height: 48px;
+            }
+            
+            .calendar-day {
+                font-size: 17px;
+            }
+            
+            .event-content {
+                margin-left: 15px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .timeline-container {
+                max-height: 55vh;
+            }
+            
+            .timeline-event {
+                flex-direction: column;
+            }
+            
+            .event-content {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+            
+            .calendar-icon {
+                align-self: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="timeline-container">
+        <div class="timeline-header">
+            <h1>Audit Calendar</h1>
+            <p>Upcoming audit milestones and due dates</p>
+        </div>
+        <div class="timeline-content" id="scrollable-content">
+            <div class="timeline">
+
+                <!-- Timeline events will be populated dynamically
+                {% for event in events %}
+                <div class="timeline-event">
+                    <div class="calendar-icon">
+                        <div class="calendar-month">{{ event.month }}</div>
+                        <div class="calendar-day">{{ event.day }}</div>
+                    </div>
+                    <div class="event-content">
+                        <div class="event-title">{{ event.title }}</div>
+                        <div class="event-desc">{{ event.description }}</div>
+                    </div>
+                </div>
+                {% endfor %} --->
+
+                <div class="timeline-event">
+                    <div class="calendar-icon">
+                        <div class="calendar-month">Jan</div>
+                        <div class="calendar-day">15</div>
+                    </div>
+                    <div class="event-content">
+                        <div class="event-title">Project Kickoff Meeting</div>
+                        <div class="event-desc"></div>
+                    </div>
+                </div>
+                
+                <div class="timeline-event">
+                    <div class="calendar-icon">
+                        <div class="calendar-month">Feb</div>
+                        <div class="calendar-day">28</div>
+                    </div>
+                    <div class="event-content">
+                        <div class="event-title">Design Phase Completed</div>
+                        <div class="event-desc"></div>
+                    </div>
+                </div>
+                
+                <div class="timeline-event">
+                    <div class="calendar-icon">
+                        <div class="calendar-month">Mar</div>
+                        <div class="calendar-day">12</div>
+                    </div>
+                    <div class="event-content">
+                        <div class="event-title">Development Started</div>
+                        <div class="event-desc"></div>
+                    </div>
+                </div>
+                
+                <div class="timeline-event">
+                    <div class="calendar-icon">
+                        <div class="calendar-month">Apr</div>
+                        <div class="calendar-day">5</div>
+                    </div>
+                    <div class="event-content">
+                        <div class="event-title">Alpha Release</div>
+                        <div class="event-desc"></div>
+                    </div>
+                </div>
+                
+                <div class="timeline-event">
+                    <div class="calendar-icon">
+                        <div class="calendar-month">May</div>
+                        <div class="calendar-day">20</div>
+                    </div>
+                    <div class="event-content">
+                        <div class="event-title">Beta Testing Phase</div>
+                        <div class="event-desc"></div>
+                    </div>
+                </div>
+                
+                <div class="timeline-event">
+                    <div class="calendar-icon">
+                        <div class="calendar-month">Jun</div>
+                        <div class="calendar-day">10</div>
+                    </div>
+                    <div class="event-content">
+                        <div class="event-title">Official Launch</div>
+                        <div class="event-desc"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Optional: Add subtle animation for timeline events
+        document.addEventListener('DOMContentLoaded', function() {
+            const events = document.querySelectorAll('.timeline-event');
+            
+            events.forEach((event, index) => {
+                // Add a slight delay for each event
+                event.style.opacity = '0';
+                event.style.transform = 'translateY(10px)';
+                
+                setTimeout(() => {
+                    event.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    event.style.opacity = '1';
+                    event.style.transform = 'translateY(0)';
+                }, 100 * index);
+            });
+        });
+
+        // Add scroll indicator to the timeline content
+        const timelineContent = document.getElementById('scrollable-content');
+
+        timelineContent.addEventListener('scroll', function() {
+            if (timelineContent.scrollTop > 5) {
+                timelineContent.classList.add('scrolling');
+            } else {
+                timelineContent.classList.remove('scrolling');
+            }
+        });
+
+        // Initialize scrolling class based on initial scroll position
+        if (timelineContent.scrollHeight > timelineContent.clientHeight) {
+            timelineContent.classList.add('scrolling');
+        }
+
+        // Add new JavaScript for dynamic loading
+        document.addEventListener('DOMContentLoaded', function() {
+            // Optional: Load data via AJAX instead of template rendering
+            // loadTimelineData();
+            
+            // Add event listener to refresh button
+            const refreshBtn = document.getElementById('refresh-btn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function() {
+                    loadTimelineData();
+                });
+            }
+        });
+        
+        // Add animation to events loading          
+        function loadTimelineData() {
+            fetch('/api/timeline')
+                .then(response => response.json())
+                .then(events => {
+                    const timelineContainer = document.getElementById('timeline-container');
+                    timelineContainer.innerHTML = '';
+                    
+                    events.forEach((event, index) => {
+                        const eventElement = document.createElement('div');
+                        eventElement.className = 'timeline-event';
+                        eventElement.innerHTML = `
+                            <div class="calendar-icon">
+                                <div class="calendar-month">${event.month}</div>
+                                <div class="calendar-day">${event.day}</div>
+                            </div>
+                            <div class="event-content">
+                                <div class="event-title">${event.title}</div>
+                                <div class="event-desc">${event.description}</div>
+                            </div>
+                        `;
+                        
+                        // Add animation delay
+                        eventElement.style.opacity = '0';
+                        eventElement.style.transform = 'translateY(10px)';
+                        
+                        setTimeout(() => {
+                            eventElement.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                            eventElement.style.opacity = '1';
+                            eventElement.style.transform = 'translateY(0)';
+                        }, 100 * index);
+                        
+                        timelineContainer.appendChild(eventElement);
+                    });
+                })
+                .catch(error => console.error('Error loading timeline data:', error));
+        }
+
+    </script>
+</body>
+</html>
